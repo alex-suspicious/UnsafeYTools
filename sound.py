@@ -8,6 +8,12 @@ from moviepy.editor import VideoFileClip, AudioFileClip
 import soundfile as sf
 import wave
 
+try:
+    with open("accepted", "r") as file:
+        print("Accepted")
+except FileNotFoundError:
+    exit()
+
 def generate_sine_value(freq, t, amplitude=0.1):
     return amplitude * np.sin(2 * np.pi * freq * t)
 

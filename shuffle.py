@@ -9,6 +9,12 @@ import sys
 import argparse
 
 try:
+    with open("accepted", "r") as file:
+        print("Accepted")
+except FileNotFoundError:
+    exit()
+
+try:
     print(f"Type of ffmpeg_python: {type(ffmpeg_python)}")
     print(f"Module name: {ffmpeg_python.__name__}")
     if hasattr(ffmpeg_python, '__file__'):

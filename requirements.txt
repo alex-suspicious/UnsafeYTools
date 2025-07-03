@@ -1,0 +1,7 @@
+Pillow
+moderngl
+numpy
+imageio 
+ffmpeg-python
+moviepy == 1.0.3
+soundfile

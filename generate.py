@@ -5,6 +5,32 @@ import os
 import string
 import random
 import math 
+import sys
+
+try:
+    with open("accepted", "r") as file:
+        #content = file.read()
+        print("Accepted")
+except FileNotFoundError:
+    print("""
+    \033[1m⚠️ Disclaimer & Acceptable Use\033[0m
+    This tool is intended solely for ethical, legal, and constructive purposes, such as privacy protection, artistic expression, or research. Any misuse of this tool is strictly prohibited.
+
+    \033[1mSpecifically, you may NOT use this tool to:\033[0m
+        Upload, distribute, or conceal \033[1millegal content\033[0m, including but not limited to \033[1mchild sexual abuse material (CSAM)\033[0m, \033[1mgore\033[0m, \033[1mviolence\033[0m, or \033[1mhate content.\033[0m
+
+    \033[1mThe developer of this tool take no responsibility for misuse and explicitly condemn any use that facilitates harm, abuse, or illegality.\033[0m
+    """)
+
+    accepted = input("To accept that, type 'accept'\n")
+    if( accepted != "accept" ):
+        print("\033[1mTerms were not accepted\033[0m")
+        exit()
+
+    with open("accepted", "w") as accepted:
+        accepted.write("accepted")
+        print("\033[1mTerms were accepted\033[0m")
+
 
 def deterministic_hash(s: str, prime: int = 31, modulus: int = 2**32) -> float:
     h = 0
