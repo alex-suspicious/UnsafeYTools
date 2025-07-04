@@ -7,6 +7,7 @@ import ffmpeg as ffmpeg_python
 import os
 import sys 
 import argparse
+import json
 
 try:
     with open("accepted", "r") as file:
@@ -15,19 +16,19 @@ except FileNotFoundError:
     exit()
 
 try:
-    print(f"Type of ffmpeg_python: {type(ffmpeg_python)}")
-    print(f"Module name: {ffmpeg_python.__name__}")
-    if hasattr(ffmpeg_python, '__file__'):
-        print(f"Module file: {ffmpeg_python.__file__}")
-    else:
-        print("Module does not have __file__ attribute (might be a built-in or namespace package?).")
+    #print(f"Type of ffmpeg_python: {type(ffmpeg_python)}")
+    #print(f"Module name: {ffmpeg_python.__name__}")
+    #if hasattr(ffmpeg_python, '__file__'):
+    #    print(f"Module file: {ffmpeg_python.__file__}")
+    #else:
+    #    print("Module does not have __file__ attribute (might be a built-in or namespace package?).")
     
     has_input = hasattr(ffmpeg_python, 'input')
     has_output = hasattr(ffmpeg_python, 'output')
     has_Error = hasattr(ffmpeg_python, 'Error')
-    print(f"Has 'input' attribute: {has_input}")
-    print(f"Has 'output' attribute: {has_output}")
-    print(f"Has 'Error' attribute: {has_Error}")
+    #print(f"Has 'input' attribute: {has_input}")
+    #print(f"Has 'output' attribute: {has_output}")
+    #print(f"Has 'Error' attribute: {has_Error}")
 
 except Exception as e:
     print(f"Error during diagnostic checks: {e}")
@@ -40,7 +41,7 @@ parser.add_argument('input_video', help='Input MP4 file')
 args = parser.parse_args()
 
 INPUT_VIDEO_PATH = args.input_video
-EXTRA_TEXTURE_PATH = "offsets/offset_map.png"
+EXTRA_TEXTURE_PATH = "offsets/offset_map.json"
 FINAL_OUTPUT_PATH = "temp_output.mp4"
 TEMP_VIDEO_ONLY_PATH = "output_video_only.mp4" 
 SHADER_PATH = "shader.glsl"
@@ -84,24 +85,36 @@ vbo  = ctx.buffer(quad.tobytes())
 vao  = ctx.simple_vertex_array(prog, vbo, 'in_pos', 'in_uv')
 
 try:
-    extra_img = Image.open(EXTRA_TEXTURE_PATH).convert("RGBA")
-    extra_tex = ctx.texture(extra_img.size, 4, extra_img.tobytes())
-    
+    raw_matrix_file = open(EXTRA_TEXTURE_PATH, "r")
+    raw_matrix = raw_matrix_file.read()
+    raw_matrix_file.close()
+
+    raw_matrix = json.loads(raw_matrix)
+    np_matrix = np.array(raw_matrix, dtype='f4').tobytes()
+
+    extra_tex = ctx.texture(
+        (80, 80),
+        2,
+        np_matrix,
+        dtype='f4'
+    )
     extra_tex.filter = (moderngl.NEAREST, moderngl.NEAREST)
+
 except FileNotFoundError:
-     print(f"Error: Extra texture file not found at {EXTRA_TEXTURE_PATH}")
-     exit()
+    print(f"Error: Extra texture file not found at {EXTRA_TEXTURE_PATH}")
+    exit()
 except Exception as e:
-     print(f"Error loading extra texture: {e}")
-     exit()
+    print(f"Error loading extra texture: {e}")
+    exit()
+
 try:
     reader = imageio.get_reader(INPUT_VIDEO_PATH, format="FFMPEG")
     meta   = reader.get_meta_data()
     fps    = meta.get("fps", 30) 
     width, height = meta.get("size", (640, 480)) 
     if width == 0 or height == 0:
-         print("Warning: Could not get video size from metadata. Using default 640x480.")
-         width, height = (640, 480)
+        print("Warning: Could not get video size from metadata. Using default 640x480.")
+        width, height = (640, 480)
     video_writer = imageio.get_writer(
         TEMP_VIDEO_ONLY_PATH,
         fps=fps,
@@ -137,8 +150,9 @@ try:
         video_tex.filter = (moderngl.NEAREST, moderngl.NEAREST)
         
         video_tex.use(location=0)
-        extra_tex.use(location=1)
         prog['video_tex'].value = 0
+
+        extra_tex.use(location=1)
         prog['extra_tex'].value = 1
 
         ctx.clear(0.0, 0.0, 0.0, 0.0) 
@@ -176,12 +190,13 @@ try:
     original_audio_stream = ffmpeg_python.input(INPUT_VIDEO_PATH).audio 
 
     ffmpeg_python.output(
-        processed_video_stream.video, 
-        original_audio_stream,        
+        processed_video_stream.video,
+        original_audio_stream,
         FINAL_OUTPUT_PATH,
-        vcodec='copy', 
-        acodec='copy', 
-        shortest=None  
+        vcodec='copy',
+        acodec='copy',
+        shortest=None,
+        loglevel="quiet"
     ).run(overwrite_output=True) 
 
     print(f"Final output saved to {FINAL_OUTPUT_PATH}")

@@ -5,7 +5,6 @@ import os
 import string
 import random
 import math 
-import sys
 
 try:
     with open("accepted", "r") as file:
@@ -108,7 +107,7 @@ def generate_maps_and_token(width: int, height: int, seed: str = None) -> tuple[
             shuffle_uv_offsets[ty_shuffled][tx_shuffled] = (offset_x, offset_y)
     return shuffle_uv_offsets, unshuffle_uv_offsets, used_seed
 
-
+# Old one
 def save_offset_map_to_png(offset_map: list[list[tuple[float, float]]], width: int, height: int, filename: str):
     if not offset_map or height != len(offset_map) or (height > 0 and width != len(offset_map[0])):
         raise ValueError("Offset map dimensions do not match width and height.")
@@ -133,6 +132,21 @@ def save_offset_map_to_png(offset_map: list[list[tuple[float, float]]], width: i
     image.save(filename)
     print(f"Saved offset map to {filename}")
 
+def save_offset_map_to_json(offset_map: list[list[tuple[float, float]]], width: int, height: int, filename: str):
+    if not offset_map or height != len(offset_map) or (height > 0 and width != len(offset_map[0])):
+        raise ValueError("Offset map dimensions do not match width and height.")
+
+    data = [[[dx, dy] for dx, dy in row] for row in offset_map]
+
+    output_dir = os.path.dirname(filename)
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    with open(filename, 'w') as f:
+        json.dump(data, f, indent=4)
+    
+    print(f"Saved offset map to {filename}")
+
 if __name__ == "__main__":
     image_width = 80
     image_height = 80
@@ -142,18 +156,22 @@ if __name__ == "__main__":
         os.makedirs(output_directory)
         print(f"Created directory: {output_directory}")
 
-    shuffle_output_filename = os.path.join(output_directory, "offset_map.png")
+    shuffle_output_filename = os.path.join(output_directory, "offset_map.json")
     unshuffle_output_filename = os.path.join(output_directory, "inv_offset_map.png")
 
     print(f"Generating offset maps and token for a {image_width}x{image_height} image...")
 
     try:
-        test_seed = ''.join(random.choices(string.ascii_uppercase + string.digits, k=20)) 
+        test_seed = ''.join(random.choices(string.ascii_uppercase + string.digits, k=20))
+        custom_seed = input("Enter a custom seed (or press Enter to use a random one): ").strip()
+        if custom_seed:
+            test_seed = custom_seed
 
         shuffle_map_data, unshuffle_map_data, used_seed = generate_maps_and_token(image_width, image_height, seed=test_seed)
 
         print("\nSaving Shuffle Offset Map...")
-        save_offset_map_to_png(shuffle_map_data, image_width, image_height, shuffle_output_filename)
+        #save_offset_map_to_png(shuffle_map_data, image_width, image_height, shuffle_output_filename)
+        save_offset_map_to_json(shuffle_map_data, image_width, image_height, shuffle_output_filename)
 
         print("\nSaving Unshuffle Offset Map...")
         save_offset_map_to_png(unshuffle_map_data, image_width, image_height, unshuffle_output_filename)
@@ -165,7 +183,7 @@ if __name__ == "__main__":
         print(f"Height: {image_height}")
         print("-----------------------------------------------")
 
-        print("\nProcess complete. PNG offset maps have been generated and token/seed printed.")
+        print("\nProcess complete. Offset map have been generated and token/seed printed.")
 
     except ImportError:
         print("Error: The Pillow library (PIL) is not installed.")

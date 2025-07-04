@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import argparse
 import numpy as np
 import os
@@ -6,7 +5,6 @@ import tempfile
 import subprocess
 from moviepy.editor import VideoFileClip, AudioFileClip
 import soundfile as sf
-import wave
 
 try:
     with open("accepted", "r") as file:
@@ -32,52 +30,33 @@ def extract_audio(input_video):
 def add_sine_wave_to_audio(audio_file, frequency, amplitude=0.3):
     print(f"Modifying audio with {frequency}Hz sine wave...")
 
-    with wave.open(audio_file, 'rb') as wf:
-        n_channels = wf.getnchannels()
-        sample_width = wf.getsampwidth()
-        sample_rate = wf.getframerate()
-        n_frames = wf.getnframes()
-        print("sample_rate:" + str(sample_rate))
+    audio_data, sample_rate = sf.read(audio_file, dtype='float32')
 
-        frames = wf.readframes(n_frames)
+    if audio_data.ndim == 1:
+        n_channels = 1
+        n_frames = len(audio_data)
+        audio_data = audio_data.reshape(-1, 1)
+    else:
+        n_frames, n_channels = audio_data.shape
 
-    audio_data = np.frombuffer(frames, dtype=np.int16)
+    t = np.arange(n_frames) / sample_rate
+
+    sine_wave_component2 = generate_sine_value(frequency+6000, t, amplitude)
+    sine_wave_component3 = generate_sine_value(frequency+15000, t, amplitude)
+
+    total_sine_wave = sine_wave_component2 + sine_wave_component3
 
     if n_channels > 1:
-        audio_data = audio_data.reshape(-1, n_channels)
-    else:
-        audio_data = audio_data.reshape(-1, 1)
+        total_sine_wave = np.tile(total_sine_wave[:, np.newaxis], (1, n_channels))
 
-    audio_float = audio_data.astype(np.float32) / 32767.0
-
-    modified_audio_float = np.empty_like(audio_float)
-
-    for i in range(n_frames):
-        t = i / sample_rate
-        sine_value   = 0
-        
-        factor1 = np.clip(0,1,np.cos(i*0.0003))
-        factor2 = np.clip(0,1,np.cos(i*0.0001))
-        factor3 = np.clip(0,1,np.cos(i*0.0006))
-
-        sine_value += generate_sine_value(frequency-100, t, amplitude)*factor1
-        sine_value += generate_sine_value(frequency+6000, t, amplitude)*factor2
-        sine_value += generate_sine_value(frequency+10000, t, amplitude)*factor3
-
-        for j in range(n_channels):
-             modified_audio_float[i, j] = (audio_float[i, j] * 0.01) + sine_value
+    modified_audio_float = (audio_data * 0.012) + total_sine_wave
 
     max_val = np.max(np.abs(modified_audio_float))
     if max_val > 1.0:
         modified_audio_float = modified_audio_float / max_val
 
-    modified_audio_int = (modified_audio_float * 32767).astype(np.int16)
-
-    if n_channels == 1:
-        modified_audio_int = modified_audio_int.flatten()
-
     temp_output = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
-    sf.write(temp_output.name, modified_audio_int, sample_rate, subtype='PCM_16')
+    sf.write(temp_output.name, modified_audio_float, sample_rate, subtype='PCM_16')
 
     return temp_output.name
 

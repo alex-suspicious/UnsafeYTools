@@ -8,7 +8,10 @@ uniform sampler2D extra_tex;
 
 void main() {
     vec4 shuffle_sample = texture(extra_tex, v_uv);
-    vec2 decoded_offset = (shuffle_sample.xy * 2.0) - 1.0;
+    //vec2 decoded_offset = (shuffle_sample.xy * 2.0) - 1.0;
+
+    vec2 decoded_offset = shuffle_sample.xy;
+    
     vec2 base_new_uv = v_uv + decoded_offset;
 
     vec4 c = texture(video_tex, base_new_uv);
