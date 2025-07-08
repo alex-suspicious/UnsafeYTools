@@ -120,7 +120,7 @@ try:
         fps=fps,
         format="FFMPEG",
         codec="libx264",
-        quality=8 
+        #quality=8 
     )
 except Exception as e:
     print(f"Error opening video file {INPUT_VIDEO_PATH} or setting up writer: {e}")
