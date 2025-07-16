@@ -53,7 +53,7 @@ def main():
             '-f', 'lavfi',
             '-i', f'sine=frequency={freq2}:r={sample_rate}:d={duration}',
             '-filter_complex',
-            f'[0:a]volume=0.012[original_scaled];'
+            f'[0:a]volume=0.03[original_scaled];'
             f'[1:a]volume={args.amplitude}[sine1_vol];'
             f'[2:a]volume={args.amplitude}[sine2_vol];'
             f'[sine1_vol][sine2_vol]amix=inputs=2:duration=longest:weights=1 1[sine_sum];'
