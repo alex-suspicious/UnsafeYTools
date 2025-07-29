@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "electron . --no-sandbox",
-    "build": "electron-builder"
+    "build": "electron-builder -wl"
   },
   "author": "alex",
   "license": "GPL-3.0",
