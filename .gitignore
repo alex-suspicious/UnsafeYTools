@@ -1,0 +1,6 @@
+offsets
+node_modules
+*.mp4
+test
+video_processor
+dist

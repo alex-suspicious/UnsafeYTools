@@ -1,0 +1,23 @@
+{
+  "name": "unsafeytools",
+  "version": "1.0.0",
+  "description": "Encrypt videos",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron . --no-sandbox",
+    "build": "electron-builder"
+  },
+  "author": "alex",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "electron": "^37.2.4",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "extraResources": [
+      {
+        "from": "video_processor"
+      }
+    ]
+  }
+}
