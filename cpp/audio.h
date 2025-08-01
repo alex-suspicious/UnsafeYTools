@@ -12,11 +12,8 @@ namespace UnsafeYT{
         std::array<char, 128> buffer;
         std::string result;
 
-        #ifdef _WIN32
-            FILE* pipe = _popen(cmd.c_str(), "r");
-        #else
-            FILE* pipe = popen(cmd.c_str(), "r");
-        #endif
+
+        FILE* pipe = popen(cmd.c_str(), "r");
 
         if (!pipe) {
             throw std::runtime_error("Failed to open pipe for command: " + cmd);
@@ -27,20 +24,13 @@ namespace UnsafeYT{
                 result += buffer.data();
             }
         } catch (...) {
-            #ifdef _WIN32
-                _pclose(pipe);
-            #else
-                pclose(pipe);
-            #endif
+            pclose(pipe);
+
             throw;
         }
 
         int status = 0;
-        #ifdef _WIN32
-            status = _pclose(pipe);
-        #else
-            status = pclose(pipe);
-        #endif
+        status = pclose(pipe);
 
         if (status != 0) {
             std::string error_message = "Command exited with non-zero status: " + std::to_string(status);

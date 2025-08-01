@@ -6,9 +6,36 @@
 #include <cmath>
 #include <numeric>
 #include <limits>
+#include <array>
+
+extern "C" {
+    #include <libavcodec/avcodec.h>
+    #include <libswscale/swscale.h>
+    #include <libavutil/imgutils.h>
+    #include <libavformat/avformat.h>
+    #include <libavfilter/avfilter.h>
+    #include <libavfilter/buffersink.h>
+    #include <libavfilter/buffersrc.h>
+    #include <libavutil/opt.h>
+    #include <libavutil/avstring.h>
+    #include <libavutil/frame.h>
+    #include <libavutil/avutil.h>
+    #include <libavutil/error.h>
+    #include <libavutil/fifo.h>
+    #include <libavformat/avio.h>
+    #include <libswresample/swresample.h>
+}
+
+#define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <opencv2/opencv.hpp>
+
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <cstdio>
+#endif
+
 #include "hash.h"
 #include "offset.h"
 #include "shader.h"
@@ -56,11 +83,6 @@ void main() {
 
 
 int main(int argc, char* argv[]){
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return -1;
-    }
-
     std::string seed = "my_secret_seed_123"; // Or the token as i'm calling it lol
     std::string inpath = "input_video.mp4";
     std::string outpath = "output_video.mp4";
