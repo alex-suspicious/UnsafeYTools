@@ -59,7 +59,12 @@ namespace UnsafeYT{
         }
 
         try {
-            std::string cmd_duration = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"" + source_audio_video_path + "\"";
+            #ifdef _WIN32
+                std::string cmd_duration = "ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"" + source_audio_video_path + "\"";
+            #else
+                std::string cmd_duration = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"" + source_audio_video_path + "\"";
+            #endif
+
             std::string duration_str = exec(cmd_duration);
             double duration = 0.0;
             try {
@@ -73,7 +78,13 @@ namespace UnsafeYT{
                 throw std::runtime_error("Could not determine duration of source audio video. Is the file valid?");
             }
 
-            std::string cmd_samplerate = "ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of default=noprint_wrappers=1:nokey=1 \"" + source_audio_video_path + "\"";
+            
+            #ifdef _WIN32
+                std::string cmd_samplerate = "ffprobe.exe -v error -select_streams a:0 -show_entries stream=sample_rate -of default=noprint_wrappers=1:nokey=1 \"" + source_audio_video_path + "\"";
+            #else
+                std::string cmd_samplerate = "ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of default=noprint_wrappers=1:nokey=1 \"" + source_audio_video_path + "\"";
+            #endif
+
             std::string samplerate_str = exec(cmd_samplerate);
             int sample_rate = 44100;
             bool has_source_audio = false;
@@ -92,7 +103,13 @@ namespace UnsafeYT{
 
             std::ostringstream ffmpeg_cmd_stream;
 
-            ffmpeg_cmd_stream << "ffmpeg -i \"" << input_video_path << "\" ";
+            #ifdef _WIN32
+                ffmpeg_cmd_stream << "ffmpeg.exe -nostdin -loglevel error -i \"" << input_video_path << "\" ";
+            #else
+                ffmpeg_cmd_stream << "ffmpeg -i \"" << input_video_path << "\" ";
+            #endif
+            
+
             ffmpeg_cmd_stream << "-i \"" << source_audio_video_path << "\" ";
             ffmpeg_cmd_stream << "-f lavfi -i \"sine=frequency=" << freq1 << ":r=" << sample_rate << ":d=" << duration << "\" ";
             ffmpeg_cmd_stream << "-f lavfi -i \"sine=frequency=" << freq2 << ":r=" << sample_rate << ":d=" << duration << "\" ";

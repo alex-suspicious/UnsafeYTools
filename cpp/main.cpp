@@ -112,6 +112,7 @@ int main(int argc, char* argv[]){
         outpath
     );
 
+
     if (std::filesystem::exists(outpath + "noaudio.mp4")) {
         std::filesystem::remove(outpath + "noaudio.mp4");
     }
