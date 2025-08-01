@@ -190,7 +190,7 @@ namespace UnsafeYT {
             sws_ctx = sws_getContext(
                 this->frame_width, this->frame_height, in_codec_ctx->pix_fmt,
                 this->frame_width, this->frame_height, AV_PIX_FMT_RGB24,
-                SWS_BILINEAR, NULL, NULL, NULL
+                SWS_POINT, NULL, NULL, NULL
             );
             if (!sws_ctx) {
                 std::cerr << "Error: Cannot create SwsContext for color conversion." << std::endl;
@@ -272,9 +272,19 @@ namespace UnsafeYT {
             out_codec_ctx->width = this->frame_width;
             out_codec_ctx->height = this->frame_height;
             out_codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P; 
+            //out_codec_ctx->pix_fmt = AV_PIX_FMT_YUV444P; 
             out_codec_ctx->time_base = (AVRational){1, (int)this->fps};
-            out_codec_ctx->gop_size = 12;
+            out_codec_ctx->gop_size = 5;
             out_codec_ctx->max_b_frames = 2;
+            out_codec_ctx->bit_rate = 64'000'000;
+
+            AVDictionary* codec_options = nullptr;
+            av_dict_set(&codec_options, "preset", "ultrafast", 0);
+            av_dict_set(&codec_options, "crf", "0", 0);
+            av_dict_set(&codec_options, "qp", "0", 0);
+
+            avcodec_open2(out_codec_ctx, out_codec, &codec_options);
+            av_dict_free(&codec_options);
 
             if (out_fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER) {
                 out_codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
@@ -296,7 +306,7 @@ namespace UnsafeYT {
             this->out_sws_ctx = sws_getContext(
                 this->frame_width, this->frame_height, AV_PIX_FMT_RGB24,
                 out_codec_ctx->width, out_codec_ctx->height, out_codec_ctx->pix_fmt,
-                SWS_BILINEAR, NULL, NULL, NULL
+                SWS_POINT, NULL, NULL, NULL
             );
 
             if (!this->out_sws_ctx) {
